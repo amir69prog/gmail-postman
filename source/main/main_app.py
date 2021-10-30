@@ -3,8 +3,7 @@ The main app file goes here
 set GUI, SMTP, BOX, ETC... 
 '''
 
-import sys
-import re
+import sys, re, os
 
 from pathlib import Path
 from typing import Tuple
@@ -34,8 +33,7 @@ logging.basicConfig(
 
 
 
-def create_log_file():
-	file_name = BASE_DIR / 'logging_file.log'
+def create_log_file(file_name):
 	with open(str(file_name), 'w') as file:
 		pass
 
@@ -411,7 +409,11 @@ class MailStuffLayout(QWidget):
 
 
 if __name__ == '__main__':
-	create_log_file()
+	# creat the log file
+	file_name = BASE_DIR / 'logging_file.log'
+	if not os.path.exists(str(file_name)):
+		create_log_file()
+
 	app = QApplication(sys.argv)
 	
 	layout = QStackedLayout()
