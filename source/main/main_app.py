@@ -34,6 +34,11 @@ logging.basicConfig(
 
 
 
+def create_log_file():
+	file_name = BASE_DIR / 'logging_file.log'
+	with open(str(file_name), 'w') as file:
+		pass
+
 class GreetingLayout(QWidget):
 	'''
 	the first page that is greeting postman to user
@@ -213,6 +218,7 @@ class EmailPasswordLayout(QWidget):
 
 
 	def back_to_home(self):
+		self.set_fields_to_empty()
 		self.layout.setCurrentIndex(0)
 
 
@@ -395,7 +401,10 @@ class MailStuffLayout(QWidget):
 
 
 
+
+
 if __name__ == '__main__':
+	create_log_file()
 	app = QApplication(sys.argv)
 	
 	layout = QStackedLayout()
