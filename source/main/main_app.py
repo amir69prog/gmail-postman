@@ -417,7 +417,7 @@ if __name__ == '__main__':
 	app = QApplication(sys.argv)
 	
 	layout = QStackedLayout()
-	
+
 	greeting = GreetingLayout(layout)
 	mail_stuff = MailStuffLayout(layout)
 	email_password = EmailPasswordLayout(layout, mail_stuff)
