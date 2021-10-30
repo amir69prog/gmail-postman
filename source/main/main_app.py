@@ -287,7 +287,7 @@ class MailStuffLayout(QWidget):
 		return message
 
 
-	def validate_require_fields(self, reciver, text, files):
+	def validate(self, reciver, text, files):
 		is_valid = True
 		message = None
 		require_files = (text, files)
@@ -295,11 +295,18 @@ class MailStuffLayout(QWidget):
 		if reciver in [None, '']:
 			is_valid = False
 			message = 'Reciever is required.'
-		elif not any(require_files):
+			return message
+
+		else: # its filled now validate it
+			message_validate_email = self.validate_email(reciver)
+			if message_validate_email is not None:
+				message = message_validate_email		
+				return message
+
+		if not any(require_files):
 			is_valid = False
 			message = 'Content or Files is required.'
-
-		return message
+			return message
 
 
 	def send_mail(self):
@@ -310,7 +317,7 @@ class MailStuffLayout(QWidget):
 		if text.isspace(): # if that just space! not correct ok!!
 			text = '' # set it to null to validate
 
-		message_if_not_valid = self.validate_require_fields(reciver, text, self.path_files)
+		message_if_not_valid = self.validate(reciver, text, self.path_files)
 		if message_if_not_valid is not None:
 			self.set_status(message_if_not_valid)
 			return
@@ -382,7 +389,7 @@ class MailStuffLayout(QWidget):
 
 
 	def back_to_email_pasword(self):
-		self.set_status(self.default_status)
+		self.set_fields_to_empty()
 		self.layout.setCurrentIndex(1)
 
 
