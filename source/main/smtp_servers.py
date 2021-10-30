@@ -1,116 +1,94 @@
+'''
+the important process goes here
+we use SMTP to send/login to Gmail account  
+only for gmail smtp server
+'''
+
+
 import smtplib
 from abc import ABC, abstractmethod
-from typing import Tuple
-from exceptions import SMTPAuthError, SMTPServerNotFoundError, SomethingWentWrongError
+from typing import Tuple, Union
 
-
-
-SERVERS = {
-	'gmail.com':('smtp.gmail.com', 465),
-	'yahoo.com':('smtp.mail.yahoo.com', 587),
-	'outlook.com':('smtp.live.com', 587),
-	'icloud.com':('smtp.mail.me.com', 587),
-	'office365.com':('smtp.office365.com', 587),
-	'aol.com':('smtp.aol.com', 587),
-}
-
-
-
-def find_server(mail_account: str) -> Tuple[str,int]:
-	server = SERVERS.get(mail_account, None)
-	return server
-
-
-def get_host_mail(email) -> str:
-	'''
-	return the mail server --> example@gmail.com --> gmail.com
-	'''
-
-	index_at = email.find('@')
-	host = email[index_at + 1:]
-	return host
-
+# aliases
+Email = str
+Content = str
+Password = str
+Title = str
 
 
 class SMTPServer(ABC):
 
-
 	@abstractmethod
 	def login(self):
 		pass
-
-
-
-class SMTPServerGmail(SMTPServer):
-
-	def __init__(self, email, password) -> None:
-		self.email = email 
-		self.password = password
-
-
-	def login(self) -> Tuple[bool, str]:
-		mail_account = get_host_mail(self.email)
-		host_port = find_server(mail_account)
 	
-		host, port = host_port
-		is_logged_in = False
-		server = None
-		try:
-			print(self.email , self.password)
-			with smtplib.SMTP_SSL(host, port) as server:
-				# server.starttls()
-				server.login(self.email, self.password)
-				is_logged_in = True
-				server = server
-		except smtplib.SMTPAuthenticationError:
-			msg = 'Email or password incorrect ...\nMake sure your account "allows less secure applications"'
-			raise SMTPAuthError(msg)
 
-		except:
-			raise SomethingWentWrongError()
-
-		return (is_logged_in, server)
+	@abstractmethod
+	def send_mail(self):
+		pass
 
 
+class SMTPGmailServer(SMTPServer):
+	''' logging and sending mail to the Gmail SMTP Server '''
 
-class SMTPServerYahoo(SMTPServer):
 
-	def __init__(self, email, password) -> None:
-		self.email = email 
+	def __init__(self, email: Email, password: Password):
+
+		self.host_and_port = ('smtp.gmail.com', 465)
+		self.email = email
 		self.password = password
+		self.server = None
+		self.messages = self.generate_message()
+		self.error_message = None
 
 
-	def login(self) -> Tuple[bool, str]:
-		mail_account = get_host_mail(self.email)
-		host_port = find_server(mail_account)
-		
-		host, port = host_port
-		is_logged_in = False
-		server = None
+	def generate_message(self) -> dict:
+		''' Publish possible error messages '''
+
+		messages = {
+			'SMTPAuthenticationError':'Most probably the server didn’t accept the username/password combination provided. Make sure your account Allow "Less secure app access"',
+			'SMTPNotSupportedError':'The command or option attempted is not supported by the server.',
+			'SMTPConnectError':'Error occurred during establishment of a connection with the server.',
+			'SMTPDataError':'The SMTP server refused to accept the message data.',
+			'SMTPServerDisconnected':'server unexpectedly disconnected.',
+			'gaierror':'Please check your network.',
+		}
+		return messages
+
+
+	def login(self) -> Tuple[Union[Title, None], Union[Content, None]]:
+		'''
+		logging the available accounts to the smtp server
+			note: cannot login to smtp server of unavialable accounts
+
+		'''
+
 		try:
-			print(self.email , self.password)
-			with smtplib.SMTP(host, port) as server:
-				server.starttls()
+			with smtplib.SMTP_SSL(*self.host_and_port) as server:
 				server.login(self.email, self.password)
-				is_logged_in = True
-				server = server
-		except smtplib.SMTPAuthenticationError:
-			msg = 'Email or password incorrect ...\nMake sure your account "allows less secure applications"'
-			raise SMTPAuthError(msg)
-		except:
-			raise SomethingWentWrongError()
+				# Done...
+				self.server = server
+			
+		except Exception as error:
+			title = error.__class__.__name__
+			self.error_message = self.messages.get(title,'Something went wrong!')
+			return (title, self.error_message)
+		else:
+			return (None, None)
 
 
-		return (is_logged_in, server)
+	def send_mail(self, reciver: Email, content: Content) -> Tuple[Union[Title, None], Union[Content, None]]:
+		'''
+		Sending email to account. also again logging to account and i think this is a bad way to do
+		'''
 
-
-
-SMTP_CLASSES = {
-	'gmail.com':SMTPServerGmail,
-	'yahoo.com':SMTPServerYahoo,
-	# 'outlook.com':SMTPServerOutlook,
-	# 'icloud.com':SMTPServerIcloud,
-	# 'office365.com':SMTPServerOffice365,
-	# 'aol.com':SMTPServerAol,
-}
-
+		try:
+			with smtplib.SMTP_SSL(*self.host_and_port) as server:
+				server.login(self.email, self.password) # i hate this code but i dont what to do...
+				server.sendmail(self.email, reciver, content)
+		except Exception as error:
+			title = error.__class__.__name__
+			self.error_message = self.messages.get(title,'Something went wrong!')
+			return (title, self.error_message)
+		else:
+			return (None, None)
