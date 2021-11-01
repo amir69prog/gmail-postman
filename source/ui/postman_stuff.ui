@@ -315,11 +315,11 @@ border:1px solid rgb(227, 227, 227);
    </property>
    <property name="icon">
     <iconset>
-     <normaloff>../images/add.png</normaloff>../images/add.png</iconset>
+     <normaloff>../images/icons8-attach-100.png</normaloff>../images/icons8-attach-100.png</iconset>
    </property>
    <property name="iconSize">
     <size>
-     <width>50</width>
+     <width>32</width>
      <height>47</height>
     </size>
    </property>
